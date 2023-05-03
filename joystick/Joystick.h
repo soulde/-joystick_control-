@@ -9,7 +9,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
+#include <memory>
+#include <thread>
+#include <mutex>
 #include <linux/joystick.h>
 
 #define XBOX_TYPE_BUTTON    0x01
@@ -49,26 +51,28 @@
 #define XBOX_AXIS_VAL_MID       0x00
 
 #include <string>
+#include <atomic>
 
 
 class Joystick {
 public:
-    Joystick(const std::string device);
+    Joystick(std::string  device);
 
     int open();
     int read();
-
+    void readLoop();
+    void reset();
     ~Joystick();
 
     struct xbox_map
     {
         int     time;
-        int     a;
-        int     b;
-        int     x;
-        int     y;
-        int     lb;
-        int     rb;
+        int     a, trigger_a;
+        int     b, trigger_b;
+        int     x, trigger_x;
+        int     y, trigger_y;
+        int     lb, trigger_lb;
+        int     rb, trigger_rb;
         int     start;
         int     back;
         int     home;
@@ -79,16 +83,21 @@ public:
         int     ly;
         int     rx;
         int     ry;
+
         int     lt;
         int     rt;
+
         int     xx;
         int     yy;
 
     }map{0};
 
 private:
-    int xbox_fd;
+    int xbox_fd{};
     std::string dev;
+    std::unique_ptr<std::thread> readThread;
+    std::atomic<bool> endLoop;
+
 };
 
 
