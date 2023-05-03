@@ -27,15 +27,11 @@ int main(int argc, char **argv) {
 
     while (ros::ok()) {
         ret = joystick.read();
-        twist.linear.x = -joystick.map.rx * linearMax / XBOX_AXIS_VAL_MAX;
-        twist.linear.y = -joystick.map.ry * linearMax / XBOX_AXIS_VAL_MAX;
-        twist.angular.z = -joystick.map.lx * angularMax / XBOX_AXIS_VAL_MAX;;
+        twist.linear.x = -joystick.map.ry * linearMax / XBOX_AXIS_VAL_MAX;
+        twist.linear.y = -joystick.map.rx * linearMax / XBOX_AXIS_VAL_MAX;
+        twist.angular.z = -joystick.map.lx * angularMax / XBOX_AXIS_VAL_MAX;
         twist.angular.y = -joystick.map.ly * angularMax / XBOX_AXIS_VAL_MAX;
         twistPublisher.publish(twist);
-        if (joystick.map.trigger_a == 1) {
-            ROS_INFO("button triggered");
-        }
-
         ROS_INFO("msg sent");
         ros::spinOnce();
     }
