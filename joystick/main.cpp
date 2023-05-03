@@ -2,7 +2,7 @@
 #include <iostream>
 
 int main(int argc, char **argv) {
-   Joystick joystick("/dev/input/js0");
+   Joystick joystick("/dev/input/js0", true);
 
    while (1) {
        int len = joystick.read();

@@ -41,12 +41,12 @@
 #define XBOX_AXIS_XX        0x06    /* 方向键X轴 */
 #define XBOX_AXIS_YY        0x07    /* 方向键Y轴 */
 
-#define XBOX_AXIS_VAL_UP        -32767
+#define XBOX_AXIS_VAL_UP        (-32767)
 #define XBOX_AXIS_VAL_DOWN      32767
-#define XBOX_AXIS_VAL_LEFT      -32767
+#define XBOX_AXIS_VAL_LEFT      (-32767)
 #define XBOX_AXIS_VAL_RIGHT     32767
 
-#define XBOX_AXIS_VAL_MIN       -32767
+#define XBOX_AXIS_VAL_MIN       (-32767)
 #define XBOX_AXIS_VAL_MAX       32767
 #define XBOX_AXIS_VAL_MID       0x00
 
@@ -56,48 +56,47 @@
 
 class Joystick {
 public:
-    Joystick(std::string  device);
+    Joystick(std::string device, bool blocked);
 
-    int open();
     int read();
-    void readLoop();
+
     void reset();
+
+    bool isValid();
+
     ~Joystick();
 
-    struct xbox_map
-    {
-        int     time;
-        int     a, trigger_a;
-        int     b, trigger_b;
-        int     x, trigger_x;
-        int     y, trigger_y;
-        int     lb, trigger_lb;
-        int     rb, trigger_rb;
-        int     start;
-        int     back;
-        int     home;
-        int     lo;
-        int     ro;
+    struct xbox_map {
+        int time;
+        int a, trigger_a;
+        int b, trigger_b;
+        int x, trigger_x;
+        int y, trigger_y;
+        int lb, trigger_lb;
+        int rb, trigger_rb;
+        int start;
+        int back;
+        int home;
+        int lo;
+        int ro;
 
-        int     lx;
-        int     ly;
-        int     rx;
-        int     ry;
+        int lx;
+        int ly;
+        int rx;
+        int ry;
 
-        int     lt;
-        int     rt;
+        int lt;
+        int rt;
 
-        int     xx;
-        int     yy;
+        int xx;
+        int yy;
 
-    }map{0};
+    } map{0};
 
 private:
     int xbox_fd{};
     std::string dev;
-    std::unique_ptr<std::thread> readThread;
-    std::atomic<bool> endLoop;
-
+    bool block;
 };
 
 

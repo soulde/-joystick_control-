@@ -7,22 +7,23 @@
 #include <memory>
 #include <utility>
 
-Joystick::Joystick(std::string device) : dev(std::move(device)), endLoop(false) {
+Joystick::Joystick(std::string device, bool blocked) : dev(std::move(device)), block(blocked) {
+
+    if (block) {
+        xbox_fd = ::open(dev.c_str(), O_RDONLY);
+    } else {
+        xbox_fd = ::open(dev.c_str(), O_RDONLY | O_NONBLOCK);
+    }
 
 }
 
-int Joystick::open() {
-    xbox_fd = ::open(dev.c_str(), O_RDONLY);
-    readThread.reset(new std::thread([this] { readLoop(); }));
-    return xbox_fd;
-}
 
 int Joystick::read() {
-
-    int len, type, number, value;
+    int len = 0, type, number, value;
     struct js_event js{};
 
     len = ::read(xbox_fd, &js, sizeof(struct js_event));
+
 
     type = js.type;
     number = js.number;
@@ -30,33 +31,40 @@ int Joystick::read() {
 
     map.time = js.time;
 
+    map.trigger_a = XBOX_BUTTON_OFF;
+    map.trigger_b = XBOX_BUTTON_OFF;
+    map.trigger_x = XBOX_BUTTON_OFF;
+    map.trigger_y = XBOX_BUTTON_OFF;
+    map.trigger_lb = XBOX_BUTTON_OFF;
+    map.trigger_rb = XBOX_BUTTON_OFF;
+
     if (type == JS_EVENT_BUTTON) {
         switch (number) {
             case XBOX_BUTTON_A:
-                map.trigger_a = !(value & map.a);
+                map.trigger_a = (value == XBOX_BUTTON_OFF) && (map.a == XBOX_BUTTON_ON);
                 map.a = value;
                 break;
 
             case XBOX_BUTTON_B:
-                map.trigger_b = !(value & map.b);
+                map.trigger_b = (value == XBOX_BUTTON_OFF) && (map.b == XBOX_BUTTON_ON);
                 map.b = value;
                 break;
 
             case XBOX_BUTTON_X:
-                map.trigger_x = !(value & map.x);
+                map.trigger_x = (value == XBOX_BUTTON_OFF) && (map.x == XBOX_BUTTON_ON);
                 map.x = value;
                 break;
             case XBOX_BUTTON_Y:
-                map.trigger_y = !(value & map.y);
+                map.trigger_y = (value == XBOX_BUTTON_OFF) && (map.y == XBOX_BUTTON_ON);
                 map.y = value;
                 break;
             case XBOX_BUTTON_LB:
-                map.trigger_lb = !(value & map.lb);
+                map.trigger_lb = (value == XBOX_BUTTON_OFF) && (map.lb == XBOX_BUTTON_ON);
                 map.lb = value;
                 break;
 
             case XBOX_BUTTON_RB:
-                map.trigger_rb = !(value & map.rb);
+                map.trigger_rb = (value == XBOX_BUTTON_OFF) && (map.rb == XBOX_BUTTON_ON);
                 map.rb = value;
                 break;
 
@@ -126,23 +134,23 @@ int Joystick::read() {
 }
 
 Joystick::~Joystick() {
-    endLoop = true;
-    readThread->join();
+
     close(xbox_fd);
 }
 
-void Joystick::readLoop() {
-    while (!endLoop) {
-        int ret = read();
-        if (ret < 0) {
-            reset();
-        }
-    }
-}
 
 void Joystick::reset() {
     if (xbox_fd > 0) {
         close(xbox_fd);
     }
-    xbox_fd = ::open(dev.c_str(), O_RDONLY);
+
+    if (block) {
+        xbox_fd = ::open(dev.c_str(), O_RDONLY);
+    } else {
+        xbox_fd = ::open(dev.c_str(), O_RDONLY | O_NONBLOCK);
+    }
+}
+
+bool Joystick::isValid() {
+    return xbox_fd > 0;
 }
