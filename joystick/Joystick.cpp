@@ -7,21 +7,15 @@
 #include <memory>
 #include <utility>
 
-Joystick::Joystick(std::string device, bool blocked) : dev(std::move(device)), block(blocked) {
-
-    if (block) {
-        xbox_fd = ::open(dev.c_str(), O_RDONLY);
-    } else {
-        xbox_fd = ::open(dev.c_str(), O_RDONLY | O_NONBLOCK);
-    }
-
+Joystick::Joystick(std::string device, bool blocked) : dev(std::move(device)), block(blocked), xbox_fd(-1) {
+    reset();
 }
 
 
 int Joystick::read() {
     int len = 0, type, number, value;
     struct js_event js{};
-
+    tcflush(xbox_fd, TCIOFLUSH);
     len = ::read(xbox_fd, &js, sizeof(struct js_event));
 
 
@@ -143,12 +137,12 @@ void Joystick::reset() {
     if (xbox_fd > 0) {
         close(xbox_fd);
     }
-
     if (block) {
         xbox_fd = ::open(dev.c_str(), O_RDONLY);
     } else {
         xbox_fd = ::open(dev.c_str(), O_RDONLY | O_NONBLOCK);
     }
+
 }
 
 bool Joystick::isValid() {

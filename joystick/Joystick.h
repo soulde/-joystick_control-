@@ -9,9 +9,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <memory>
-#include <thread>
-#include <mutex>
+#include <termios.h>
 #include <linux/joystick.h>
 
 #define XBOX_TYPE_BUTTON    0x01
