@@ -8,7 +8,7 @@
 int main(int argc, char **argv) {
     ros::init(argc, argv, "joystick_control");
     ros::NodeHandle nh;
-    ros::Rate loop_rate(1);
+    ros::Rate loop_rate(10);
 
     std::string dev;
     float linearMax = 0;
@@ -24,9 +24,16 @@ int main(int argc, char **argv) {
 
     geometry_msgs::Twist twist;
     int ret = -1;
-
+    while(!joystick.isValid()){
+        joystick.reset();
+        loop_rate.sleep();
+    }
     while (ros::ok()) {
         ret = joystick.read();
+        if(ret<=0){
+            joystick.reset();
+            continue;
+        }
         twist.linear.x = -joystick.map.ry * linearMax / XBOX_AXIS_VAL_MAX;
         twist.linear.y = -joystick.map.rx * linearMax / XBOX_AXIS_VAL_MAX;
         twist.angular.z = -joystick.map.lx * angularMax / XBOX_AXIS_VAL_MAX;
